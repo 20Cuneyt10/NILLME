@@ -6,12 +6,13 @@ BIP = '192.168.1.106'#bind ip
 BORT = 5005# bind port
 X_MAX = 1920
 Y_MAX = 1080
-
+left_last = 0
+right_last = 0
 events = (
-    uinput.ABS_X + (0, X_MAX, 0, 0),
-    uinput.ABS_Y + (0, Y_MAX, 0, 0),
     uinput.BTN_LEFT,
     uinput.BTN_RIGHT,
+    uinput.ABS_X + (0, 1920, 0, 0),
+    uinput.ABS_Y + (0, 1080, 0, 0),
 )
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -20,18 +21,27 @@ server_socket.bind((BIP, BORT))
 print(f"Connected {BIP}:{BORT}...")
 print(f"mirroring on {X_MAX}x{Y_MAX}")
 
-with uinput.Device(events, name="vmouse_mirror") as device:
+with uinput.Device(events, name="Virtual Mouse") as ui:
     try:
         while True:
-            data, addr = server_socket.recvfrom(4)
+            data, addr = server_socket.recvfrom(5)
             
-            if len(data) == 4:
-                target_x, target_y = struct.unpack('!HH', data)
+            if len(data) == 5:
+                target_x, target_y, button_byte = struct.unpack('!HHB', data)
+                left_state = button_byte & 1
+                right_state = (button_byte >> 1) & 1
                 
-                device.emit(uinput.ABS_X, target_x, syn=False)
-                device.emit(uinput.ABS_Y, target_y, syn=True)
-                
-                print(f" mirrored to {target_x}, Y: {target_y}")
+                ui.emit(uinput.ABS_X, target_x, syn=False)
+                ui.emit(uinput.ABS_Y, target_y, syn=False)
+                if left_state != left_last:
+                    ui.emit(uinput.BTN_LEFT, left_state, syn=False)
+                    left_last = left_state
+                if right_state != right_last:
+                    ui.emit(uinput.BTN_RIGHT, right_state, syn=False)
+                    right_last = right_state
+                ui.emit(uinput.ABS_X, target_x, syn=False)
+                ui.emit(uinput.ABS_Y, target_y, syn=True)
+                print(f" mirrored to {target_x}, Y: {target_y} and button states: left={left_state}, right={right_state}")
                 
 
     finally:

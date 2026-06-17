@@ -12,6 +12,8 @@ Y_MAX = 1080
 #starting the tracking at the center
 abs_x = X_MAX // 2
 abs_y = Y_MAX // 2
+btn_right = 0
+btn_left = 0
 
 def find_mouse():
     for path in list_devices():
@@ -47,10 +49,18 @@ try:
                 abs_y += event.value
                 if abs_y < 0: abs_y = 0
                 elif abs_y > Y_MAX: abs_y = Y_MAX
-                
             
-        elif event.type == e.EV_SYN:
-            packet = struct.pack('!HH', abs_x, abs_y)##was using normal messages before but i was getting too high latency aı offered this kind and with this its only 4 bytes
+        if event.type == e.EV_KEY:
+            if event.code == e.BTN_LEFT:
+                btn_left = event.value
+            elif event.code == e.BTN_RIGHT:
+                btn_right = event.value
+        if event.type == e.EV_SYN:
+            l_bit = 1 if btn_left else 0
+            r_bit = 1 if btn_right else 0
+            
+            button_byte = (r_bit << 1) | l_bit
+            packet = struct.pack('!HHB', abs_x, abs_y,button_byte)##was using normal messages before but i was getting too high latency aı offered this kind and with this its only 5 bytes
             client_socket.sendto(packet, server_address)
 
             sys.stdout.write(f"\rCoordinate {abs_x:<5} | Y: {abs_y:<5}")
