@@ -2,6 +2,7 @@ import sys
 from evdev import InputDevice, list_devices, ecodes as e
 import socket
 import struct
+import selectors
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_address = ('192.168.1.106', 5005)
@@ -63,6 +64,7 @@ try:
                 btn_right = event.value
             elif event.code == 274:
                 middleclick = event.value
+            
 
         elif event.type == e.EV_SYN:
             if abs_x > X_MAX:

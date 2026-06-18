@@ -1,7 +1,12 @@
-import evdev
-device = evdev.InputDevice('/dev/input/event7')
-print(device)
+from evdev import list_devices, InputDevice
 
-device.capabilities()
+print("Scanning all system input devices...\n")
+print(f"{'Device Path':<18} | {'Device Name'}")
+print("-" * 50)
 
-print(device.capabilities(verbose=True))
+for path in list_devices():
+    try:
+        device = InputDevice(path)
+        print(f"{device.path:<18} | {device.name}")
+    except (PermissionError, OSError):
+        print(f"{path:<18} | [Permission Denied / Busy]")
