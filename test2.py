@@ -2,7 +2,6 @@ import sys
 from evdev import InputDevice, list_devices, ecodes as e
 import socket
 import struct
-import selectors
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_address = ('192.168.1.106', 5005)
@@ -95,3 +94,4 @@ try:
 finally:
     if is_grabbed:
         dev.ungrab()
+#Im giving up bro this stuf aint working
