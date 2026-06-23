@@ -1,4 +1,5 @@
-#NILLME
+####NILLME####
+
 This is NILLME Naver's Inefficient Linux to Linux Mouse extender application 
 
 
@@ -24,6 +25,7 @@ Now that we know the mouse will start at 0,1080 we can use that value and the re
 By tracking event.value, we can update a virtual coordinate tracker (abs_x, abs_y). Once the mouse crosses the X_MAX threshold (moving past the edge of the host screen), the script grabs the hardware device. This hides it from the host OS and starts sending the coordinates over UDP to the receiver machine.
 
 To keep performance fast, the script packs the data into a tight, 5-byte package using some quick bit shifts for mouse clicks and scroll wheels, then sends it over to the second machine.
+
 **Receiver Code Logic**
 
 Once the sender flings those 5-byte UDP packets across the network, the receiver machine needs a way to catch them and turn them back into actual cursor movements. Here is how the receiver handles it:
