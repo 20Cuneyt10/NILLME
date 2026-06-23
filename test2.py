@@ -3,14 +3,14 @@ from evdev import InputDevice, list_devices, ecodes as e
 import socket
 import struct
 
+
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_address = ('192.168.1.106', 5005)
 
 X_MAX = 1920
 Y_MAX = 1080
-
-abs_x = X_MAX // 2
-abs_y = Y_MAX // 2
+abs_x = 0 #/
+abs_y = 1080 #/
 btn_right = 0
 btn_left = 0
 wheelup = 0
@@ -22,12 +22,15 @@ def find_mouse():
     for path in list_devices():
         try:
             device = InputDevice(path)
-            if "G305" in device.name:
-                return device
+            capabilities = device.capabilities()
+            if e.EV_REL in capabilities and e.EV_KEY in capabilities:
+                rel_codes = capabilities[e.EV_REL]
+                key_codes = capabilities[e.EV_KEY]
+                if e.REL_X in rel_codes and e.REL_Y in rel_codes and e.BTN_LEFT in key_codes:
+                    return device
         except (PermissionError, OSError):
             continue
     return None
-
 dev = find_mouse()
 if not dev:
     print("mouse not detected")
@@ -36,6 +39,12 @@ if not dev:
 
 print(f"tracking {dev.name} [{dev.path}]")
 print(f"The screen maxs{X_MAX},{Y_MAX}")
+
+print("MOVE MOUSE TO BOTTOM-LEFT CORNER NOW") #/
+import time #/
+time.sleep(3) #/
+print("Alright thats enough") #/
+
 
 try:
     for event in dev.read_loop():
@@ -50,10 +59,10 @@ try:
                 abs_y += event.value
                 if abs_y < 0: abs_y = 0
                 elif abs_y > Y_MAX: abs_y = Y_MAX
-            elif event.code == 11:
-                if event.value > 1:
+            elif event.code == e.REL_WHEEL: #/
+                if event.value > 0: #/
                     wheelup = 1
-                if event.value < -1:
+                if event.value < 0: #/
                     wheeldown = 1
                     
         elif event.type == e.EV_KEY:
@@ -61,7 +70,7 @@ try:
                 btn_left = event.value
             elif event.code == e.BTN_RIGHT:
                 btn_right = event.value
-            elif event.code == 274:
+            elif event.code == e.BTN_MIDDLE: #/
                 middleclick = event.value
             
 
@@ -87,8 +96,8 @@ try:
                 packet = struct.pack('!HHB', send_x, abs_y, button_byte)#only 5 BYTES yippie
                 client_socket.sendto(packet, server_address)
             
-                wheelup = 0
-                wheeldown = 0
+                wheelup = 0 #/
+                wheeldown = 0 #/
                 sys.stdout.write(f"\r calculated X: {abs_x:<5} | Sent X: {send_x:<5} | Y: {abs_y:<5}")
                 sys.stdout.flush()
 finally:
